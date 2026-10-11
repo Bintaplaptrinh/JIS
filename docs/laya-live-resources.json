@@ -1,0 +1,13 @@
+{
+  "source": "Verified Unix-socket stats outside the sandbox; RSS not measured in this check",
+  "daemon_pid": 620450,
+  "daemon_alive": true,
+  "model_status": "unloaded",
+  "model_reason": "idle",
+  "model_pid": null,
+  "model_loads": 1,
+  "model_unloads": 1,
+  "model_errors": 0,
+  "model_preferred_device": "auto",
+  "model_idle_seconds": 120
+}

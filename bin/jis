@@ -1,0 +1,4 @@
+#!/bin/sh
+JIS_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+export PYTHONPATH="$JIS_ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
+exec "${JIS_PYTHON:-python}" -m jis "$@"

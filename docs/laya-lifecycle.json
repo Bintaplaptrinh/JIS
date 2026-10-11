@@ -1,0 +1,438 @@
+[
+  {
+    "device": "cpu",
+    "initial_parent_memory": {
+      "rss_mib": 30.58984375,
+      "peak_rss_mib": 30.58984375,
+      "threads": 1
+    },
+    "load_ms": 6268.448267000167,
+    "loaded_parent_memory": {
+      "rss_mib": 31.171875,
+      "peak_rss_mib": 31.171875,
+      "threads": 3
+    },
+    "loaded_worker_memory": {
+      "rss_mib": 2474.1015625,
+      "peak_rss_mib": 3249.01953125,
+      "threads": 6
+    },
+    "observed_resources": {
+      "available_mib": 22437.0390625,
+      "cpu_busy": 0.16092673763306198,
+      "memory_psi": 0.0,
+      "gpu_free_mib": null,
+      "gpu_busy": null,
+      "valid": true
+    },
+    "first_rank_ms": 75.28137500048615,
+    "cache_hit_verified": true,
+    "ambiguity_cases": [
+      {
+        "input": "git pulh origin main",
+        "previous": "git fetch origin",
+        "known": [
+          "git"
+        ],
+        "expected": "git pull origin main",
+        "heuristic": null,
+        "assisted": null,
+        "reply": {
+          "id": 2,
+          "answer": {
+            "type": "choice",
+            "choice": "c0",
+            "probabilities": {
+              "c0": 0.8348,
+              "c1": 0.1474,
+              "keep": 0.0178
+            },
+            "confidence": 0.5407,
+            "answer_confidence": 0.8348,
+            "action": {
+              "act_probability": 1.0
+            }
+          },
+          "usage": {
+            "input_tokens": 86,
+            "output_tokens": 0,
+            "state_tokens": 24,
+            "state_tokens_dropped": 0,
+            "truncated": false,
+            "truncated_questions": []
+          },
+          "inference_ms": 351.02781600016897
+        },
+        "reason": "low_confidence"
+      },
+      {
+        "input": "git pulh origin HEAD",
+        "previous": "git commit -m update",
+        "known": [
+          "git"
+        ],
+        "expected": "git push origin HEAD",
+        "heuristic": null,
+        "assisted": "git pull origin HEAD",
+        "reply": {
+          "id": 3,
+          "answer": {
+            "type": "choice",
+            "choice": "c0",
+            "probabilities": {
+              "c0": 0.9226,
+              "c1": 0.0693,
+              "keep": 0.0081
+            },
+            "confidence": 0.7285,
+            "answer_confidence": 0.9226,
+            "action": {
+              "act_probability": 1.0
+            }
+          },
+          "usage": {
+            "input_tokens": 88,
+            "output_tokens": 0,
+            "state_tokens": 26,
+            "state_tokens_dropped": 0,
+            "truncated": false,
+            "truncated_questions": []
+          },
+          "inference_ms": 345.8252190002895
+        },
+        "reason": "model_tiebreak"
+      },
+      {
+        "input": "mabe test",
+        "previous": "make clean",
+        "known": [
+          "make",
+          "mate"
+        ],
+        "expected": "make test",
+        "heuristic": null,
+        "assisted": null,
+        "reply": {
+          "id": 4,
+          "answer": {
+            "type": "choice",
+            "choice": "c0",
+            "probabilities": {
+              "c0": 0.5508,
+              "c1": 0.4176,
+              "keep": 0.0316
+            },
+            "confidence": 0.2697,
+            "answer_confidence": 0.5508,
+            "action": {
+              "act_probability": 1.0
+            }
+          },
+          "usage": {
+            "input_tokens": 79,
+            "output_tokens": 0,
+            "state_tokens": 21,
+            "state_tokens_dropped": 0,
+            "truncated": false,
+            "truncated_questions": []
+          },
+          "inference_ms": 338.58439499999804
+        },
+        "reason": "low_confidence"
+      },
+      {
+        "input": "mabe README.md",
+        "previous": "mate src/main.py",
+        "known": [
+          "make",
+          "mate"
+        ],
+        "expected": "mate README.md",
+        "heuristic": null,
+        "assisted": null,
+        "reply": {
+          "id": 5,
+          "answer": {
+            "type": "choice",
+            "choice": "c0",
+            "probabilities": {
+              "c0": 0.5655,
+              "c1": 0.4109,
+              "keep": 0.0236
+            },
+            "confidence": 0.2933,
+            "answer_confidence": 0.5655,
+            "action": {
+              "act_probability": 1.0
+            }
+          },
+          "usage": {
+            "input_tokens": 92,
+            "output_tokens": 0,
+            "state_tokens": 28,
+            "state_tokens_dropped": 0,
+            "truncated": false,
+            "truncated_questions": []
+          },
+          "inference_ms": 362.5977290002993
+        },
+        "reason": "low_confidence"
+      }
+    ],
+    "low_memory_injection_reaped_pid": 590899,
+    "unloaded_parent_memory": {
+      "rss_mib": 31.296875,
+      "peak_rss_mib": 31.296875,
+      "threads": 2
+    },
+    "reload_pid": 591836,
+    "idle_release_verified": true,
+    "stats": {
+      "model_status": "cooldown",
+      "model_reason": "idle",
+      "model_device": null,
+      "model_preferred_device": "cpu",
+      "model_threads": 2,
+      "model_checkpoint": "/home/tuanphat/Projects/JIS/models/laya-base",
+      "model_mode": "assist",
+      "model_idle_seconds": 5,
+      "model_pid": null,
+      "model_busy": false,
+      "model_calls": 5,
+      "model_errors": 0,
+      "model_timeouts": 5,
+      "model_busy_fallbacks": 0,
+      "model_loads": 2,
+      "model_unloads": 2,
+      "model_accepted": 1,
+      "model_agreements": 2,
+      "model_cache_hits": 6,
+      "resources": {
+        "available_mib": 22378.61328125,
+        "cpu_busy": 0.08755472170106315,
+        "memory_psi": 0.0,
+        "gpu_free_mib": null,
+        "gpu_busy": null,
+        "valid": true
+      }
+    }
+  },
+  {
+    "device": "cuda",
+    "initial_parent_memory": {
+      "rss_mib": 31.53125,
+      "peak_rss_mib": 31.53125,
+      "threads": 2
+    },
+    "load_ms": 6924.595590000536,
+    "loaded_parent_memory": {
+      "rss_mib": 31.55859375,
+      "peak_rss_mib": 31.55859375,
+      "threads": 3
+    },
+    "loaded_worker_memory": {
+      "rss_mib": 1628.25390625,
+      "peak_rss_mib": 3329.44921875,
+      "threads": 9
+    },
+    "observed_resources": {
+      "available_mib": 22340.2578125,
+      "cpu_busy": 0.16270566727605118,
+      "memory_psi": 0.0,
+      "gpu_free_mib": 10870.0,
+      "gpu_busy": 3.0,
+      "valid": true
+    },
+    "first_rank_ms": 42.08683399974689,
+    "cache_hit_verified": true,
+    "ambiguity_cases": [
+      {
+        "input": "git pulh origin main",
+        "previous": "git fetch origin",
+        "known": [
+          "git"
+        ],
+        "expected": "git pull origin main",
+        "heuristic": null,
+        "assisted": null,
+        "reply": {
+          "id": 2,
+          "answer": {
+            "type": "choice",
+            "choice": "c0",
+            "probabilities": {
+              "c0": 0.835,
+              "c1": 0.1472,
+              "keep": 0.0177
+            },
+            "confidence": 0.5411,
+            "answer_confidence": 0.835,
+            "action": {
+              "act_probability": 1.0
+            }
+          },
+          "usage": {
+            "input_tokens": 86,
+            "output_tokens": 0,
+            "state_tokens": 24,
+            "state_tokens_dropped": 0,
+            "truncated": false,
+            "truncated_questions": []
+          },
+          "inference_ms": 17.696353000246745
+        },
+        "reason": "low_confidence"
+      },
+      {
+        "input": "git pulh origin HEAD",
+        "previous": "git commit -m update",
+        "known": [
+          "git"
+        ],
+        "expected": "git push origin HEAD",
+        "heuristic": null,
+        "assisted": "git pull origin HEAD",
+        "reply": {
+          "id": 3,
+          "answer": {
+            "type": "choice",
+            "choice": "c0",
+            "probabilities": {
+              "c0": 0.9231,
+              "c1": 0.0689,
+              "keep": 0.0081
+            },
+            "confidence": 0.7296,
+            "answer_confidence": 0.9231,
+            "action": {
+              "act_probability": 1.0
+            }
+          },
+          "usage": {
+            "input_tokens": 88,
+            "output_tokens": 0,
+            "state_tokens": 26,
+            "state_tokens_dropped": 0,
+            "truncated": false,
+            "truncated_questions": []
+          },
+          "inference_ms": 17.509672999949544
+        },
+        "reason": "model_tiebreak"
+      },
+      {
+        "input": "mabe test",
+        "previous": "make clean",
+        "known": [
+          "make",
+          "mate"
+        ],
+        "expected": "make test",
+        "heuristic": null,
+        "assisted": null,
+        "reply": {
+          "id": 4,
+          "answer": {
+            "type": "choice",
+            "choice": "c0",
+            "probabilities": {
+              "c0": 0.5528,
+              "c1": 0.4157,
+              "keep": 0.0315
+            },
+            "confidence": 0.2704,
+            "answer_confidence": 0.5528,
+            "action": {
+              "act_probability": 1.0
+            }
+          },
+          "usage": {
+            "input_tokens": 79,
+            "output_tokens": 0,
+            "state_tokens": 21,
+            "state_tokens_dropped": 0,
+            "truncated": false,
+            "truncated_questions": []
+          },
+          "inference_ms": 17.423069999495056
+        },
+        "reason": "low_confidence"
+      },
+      {
+        "input": "mabe README.md",
+        "previous": "mate src/main.py",
+        "known": [
+          "make",
+          "mate"
+        ],
+        "expected": "mate README.md",
+        "heuristic": null,
+        "assisted": null,
+        "reply": {
+          "id": 5,
+          "answer": {
+            "type": "choice",
+            "choice": "c0",
+            "probabilities": {
+              "c0": 0.5591,
+              "c1": 0.4171,
+              "keep": 0.0238
+            },
+            "confidence": 0.2912,
+            "answer_confidence": 0.5591,
+            "action": {
+              "act_probability": 1.0
+            }
+          },
+          "usage": {
+            "input_tokens": 92,
+            "output_tokens": 0,
+            "state_tokens": 28,
+            "state_tokens_dropped": 0,
+            "truncated": false,
+            "truncated_questions": []
+          },
+          "inference_ms": 18.25931099938316
+        },
+        "reason": "low_confidence"
+      }
+    ],
+    "low_memory_injection_reaped_pid": 592967,
+    "unloaded_parent_memory": {
+      "rss_mib": 31.578125,
+      "peak_rss_mib": 31.578125,
+      "threads": 3
+    },
+    "reload_pid": 593721,
+    "idle_release_verified": true,
+    "stats": {
+      "model_status": "cooldown",
+      "model_reason": "idle",
+      "model_device": null,
+      "model_preferred_device": "cuda",
+      "model_threads": 2,
+      "model_checkpoint": "/home/tuanphat/Projects/JIS/models/laya-base",
+      "model_mode": "assist",
+      "model_idle_seconds": 5,
+      "model_pid": null,
+      "model_busy": false,
+      "model_calls": 5,
+      "model_errors": 0,
+      "model_timeouts": 0,
+      "model_busy_fallbacks": 0,
+      "model_loads": 2,
+      "model_unloads": 2,
+      "model_accepted": 2,
+      "model_agreements": 3,
+      "model_cache_hits": 6,
+      "resources": {
+        "available_mib": 23255.5234375,
+        "cpu_busy": 0.09490966796875,
+        "memory_psi": 0.0,
+        "gpu_free_mib": 8610.0,
+        "gpu_busy": 1.0,
+        "valid": true
+      }
+    }
+  }
+]

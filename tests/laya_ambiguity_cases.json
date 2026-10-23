@@ -1,6 +1,0 @@
-[
-  {"input":"git pulh origin main","previous":"git fetch origin","known":["git"],"expected":"git pull origin main"},
-  {"input":"git pulh origin HEAD","previous":"git commit -m update","known":["git"],"expected":"git push origin HEAD"},
-  {"input":"mabe test","previous":"make clean","known":["make","mate"],"expected":"make test"},
-  {"input":"mabe README.md","previous":"mate src/main.py","known":["make","mate"],"expected":"mate README.md"}
-]

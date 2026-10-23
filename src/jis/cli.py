@@ -9,11 +9,9 @@ from .client import request
 from .paths import prepare_state, private_file
 
 
-def start(checkpoint=None, device="auto", threads=2, mode="assist", idle=120):
+def start():
     try:
-        status = request({"op": "stats"}, timeout=.2)
-        if checkpoint and (status.get("model_checkpoint") != str(Path(checkpoint).resolve()) or status.get("model_preferred_device") != device or status.get("model_threads") != threads or status.get("model_mode") != mode or status.get("model_idle_seconds") != idle):
-            raise RuntimeError("A different JIS configuration is already running; stop it or use another JIS_STATE_DIR")
+        request({"op": "stats"}, timeout=.2)
         return
     except (OSError, ConnectionError):
         pass
@@ -22,11 +20,9 @@ def start(checkpoint=None, device="auto", threads=2, mode="assist", idle=120):
         if os.fstat(log.fileno()).st_size > 1048576:
             os.ftruncate(log.fileno(), 0)
         command = [sys.executable, "-m", "jis", "daemon"]
-        if checkpoint:
-            command += ["--laya-checkpoint", checkpoint, "--laya-device", device, "--laya-threads", str(threads), "--laya-mode", mode, "--laya-idle", str(idle)]
         process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                                    stderr=log, start_new_session=True)
-    deadline = time.monotonic() + (30 if checkpoint else 3)
+    deadline = time.monotonic() + 3
     while time.monotonic() < deadline:
         try:
             request({"op": "ping"}, timeout=.1)
@@ -41,14 +37,7 @@ def start(checkpoint=None, device="auto", threads=2, mode="assist", idle=120):
 def main():
     parser = argparse.ArgumentParser(prog="jis", description="JIS local zsh suggestion engine")
     sub = parser.add_subparsers(dest="action", required=True)
-    for name in ("start", "daemon"):
-        p = sub.add_parser(name)
-        p.add_argument("--laya-checkpoint", help="Optional LOCAL Laya checkpoint; lazy resource-aware process")
-        p.add_argument("--laya-device", choices=("auto", "cpu", "cuda"), default="auto")
-        p.add_argument("--laya-threads", type=int, choices=range(1, 9), default=2)
-        p.add_argument("--laya-mode", choices=("assist", "shadow"), default="assist")
-        p.add_argument("--laya-idle", type=int, default=120, help="Release model after idle seconds (>=5)")
-    for name in ("stop", "status"):
+    for name in ("start", "daemon", "stop", "status"):
         sub.add_parser(name)
     for name in ("suggest", "correct", "record"):
         p = sub.add_parser(name)
@@ -61,14 +50,12 @@ def main():
             p.add_argument("--exit-code", type=int, default=0)
     sub.add_parser("shell", help="Print source line for current shell")
     args = parser.parse_args()
-    if hasattr(args, "laya_idle") and args.laya_idle < 5:
-        parser.error("--laya-idle must be >=5 seconds")
     try:
         if args.action == "daemon":
             from .daemon import main as daemon_main
-            daemon_main(args.laya_checkpoint, args.laya_device, args.laya_threads, args.laya_mode, args.laya_idle)
+            daemon_main()
         elif args.action == "start":
-            start(args.laya_checkpoint, args.laya_device, args.laya_threads, args.laya_mode, args.laya_idle)
+            start()
             print(json.dumps(request({"op": "stats"}), indent=2))
         elif args.action == "shell":
             import shlex

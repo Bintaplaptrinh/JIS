@@ -14,8 +14,8 @@ from .types import Context
 
 
 class Server:
-    def __init__(self, store, engine, model=None):
-        self.store, self.engine, self.model = store, engine, model
+    def __init__(self, store, engine):
+        self.store, self.engine = store, engine
         self.stop = asyncio.Event()
         self.clients = 0
         self.requests = 0
@@ -30,16 +30,10 @@ class Server:
 
     async def handle(self, request, known):
         loop = asyncio.get_running_loop()
-        # Control traffic must stay available during expensive inference.
+        # Keep control traffic responsive while the engine worker is busy.
         if request["op"] in {"hello", "ping", "stats", "stop"}:
             return self.dispatch(request, known)
-        if request["op"] != "correct" or not self.model:
-            return await loop.run_in_executor(self.worker, self.dispatch, request, known)
-        context = self.context(request, known)
-        candidates = await loop.run_in_executor(self.worker, self.engine.generate, context, True)
-        ranked = self.engine.fast_ranker.rank(context, candidates)
-        ranked = await self.model.rank(context, ranked)
-        return self.engine.decide(ranked).json()
+        return await loop.run_in_executor(self.worker, self.dispatch, request, known)
 
     def dispatch(self, request, known):
         op = request["op"]
@@ -54,9 +48,8 @@ class Server:
             return {"kind": "ok", "pid": os.getpid(), "clients": self.clients,
                     "requests": self.requests, "observations": self.store.count,
                     "uptime_seconds": round(time.monotonic() - self.started, 2),
-                    "ranker": "LayaAdaptive" if self.model else "HeuristicRanker",
+                    "ranker": "HeuristicRanker",
                     "worker_threads": 1,
-                    **(self.model.stats() if self.model else {"model_status": "disabled", "model_pid": None}),
                     "max_clients": 128, "max_history": self.store.limit}
         return {"kind": "ok"}
 
@@ -118,7 +111,7 @@ class Server:
                 pass
 
 
-async def serve(checkpoint=None, device="auto", threads=2, mode="assist", idle=120):
+async def serve():
     state = prepare_state()
     with private_file(state / "daemon.lock") as lock:
         try:
@@ -133,15 +126,8 @@ async def serve(checkpoint=None, device="auto", threads=2, mode="assist", idle=1
                 raise RuntimeError("Refusing to replace a non-socket state path")
             sock.unlink()
         store = HistoryStore(state / "history.sqlite3")
-        model = None
-        if checkpoint:
-            from .model_runtime import AdaptiveModel
-            from .resources import ResourcePolicy
-            model = AdaptiveModel(checkpoint, state, device, threads, mode, ResourcePolicy(idle_seconds=idle))
-        server = Server(store, Engine(store), model)
+        server = Server(store, Engine(store))
         loop = asyncio.get_running_loop()
-        if model:
-            model.start()
         for signum in (signal.SIGTERM, signal.SIGINT):
             loop.add_signal_handler(signum, server.stop.set)
         try:
@@ -150,12 +136,10 @@ async def serve(checkpoint=None, device="auto", threads=2, mode="assist", idle=1
             async with listener:
                 await server.stop.wait()
         finally:
-            if model:
-                await model.close()
             server.worker.shutdown(wait=True, cancel_futures=True)
             store.close()
             sock.unlink(missing_ok=True)
 
 
-def main(checkpoint=None, device="auto", threads=2, mode="assist", idle=120):
-    asyncio.run(serve(checkpoint, device, threads, mode, idle))
+def main():
+    asyncio.run(serve())

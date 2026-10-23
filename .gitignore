@@ -1,5 +1,80 @@
-__pycache__/
-*.egg-info/
-.runtime/
-*.pyc
+# The public repository contains only the official heuristic runtime and
+# its installation metadata. Keep research and local work on disk.
+/*
+!/.gitignore
+!/LICENSE
+!/README.md
+!/pyproject.toml
+!/bin/
+!/shell/
+!/src/
+
+# Only the supported launcher and shell integration are published.
+/bin/*
+!/bin/jis
+/shell/*
+!/shell/jis.plugin.zsh
+
+# Former model runtime: local experiments, outside the official pipeline.
+/src/jis/laya_worker.py
+/src/jis/model_runtime.py
+/src/jis/resources.py
+
+# Tests, recipes, research documentation and experiments (at any depth).
+test/
+tests/
+recipe/
+recipes/
+doc/
+docs/
+notebooks/
+.ipynb_checkpoints/
+experiments/
+research/
+benchmarks/
+
+# Model inputs, checkpoints, training runs and generated output.
 models/
+checkpoints/
+datasets/
+artifacts/
+output/
+outputs/
+output_*/
+runs/
+wandb/
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.onnx
+
+# Python environments, caches and build products.
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+
+# Local state, credentials and editor files.
+.runtime/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.log
+.env
+.env.*
+.aws/
+.agents/
+.codex/
+.idea/
+.vscode/
+.DS_Store
+*~

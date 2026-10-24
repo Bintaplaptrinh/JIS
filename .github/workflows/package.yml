@@ -1,0 +1,82 @@
+name: Package
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install build tools and zsh
+        run: |
+          python -m pip install build twine
+          sudo apt-get update
+          sudo apt-get install -y zsh
+      - name: Build source archive and wheel
+        run: |
+          python -m build
+          python -m twine check --strict dist/*
+      - name: Install wheel
+        run: python -m pip install dist/*.whl
+      - name: Check release version
+        if: github.event_name == 'release'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          python - <<'PY'
+          import os
+          from importlib.metadata import version
+          from jis import __version__
+          assert version('jis-terminal') == __version__
+          assert os.environ['RELEASE_TAG'] == f'v{__version__}'
+          PY
+      - name: Verify installed CLI and shell outside the checkout
+        working-directory: ${{ runner.temp }}
+        env:
+          JIS_STATE_DIR: ${{ runner.temp }}/jis-package-state
+        run: |
+          set -euo pipefail
+          trap 'jis stop >/dev/null 2>&1 || true' EXIT
+          jis --help
+          zsh -f -i -c 'eval "$(jis shell)"; [[ ${_JIS_LOADED:-} == 1 ]] || exit 1; jis-status'
+          jis correct 'gti status' > correction.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          response = json.loads(Path('correction.json').read_text())
+          assert response['kind'] == 'correction', response
+          assert response['command'] == 'git status', response
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: distributions
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/jis-terminal/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: distributions
+          path: dist/
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

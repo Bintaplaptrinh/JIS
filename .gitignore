@@ -5,9 +5,17 @@
 !/LICENSE
 !/README.md
 !/pyproject.toml
+!/MANIFEST.in
 !/bin/
 !/shell/
 !/src/
+!/.github/
+
+# Package validation and release automation.
+/.github/*
+!/.github/workflows/
+/.github/workflows/*
+!/.github/workflows/package.yml
 
 # Only the supported launcher and shell integration are published.
 /bin/*

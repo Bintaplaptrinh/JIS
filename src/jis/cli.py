@@ -48,7 +48,7 @@ def main():
         p.add_argument("--known", action="append", default=[])
         if name == "record":
             p.add_argument("--exit-code", type=int, default=0)
-    sub.add_parser("shell", help="Print source line for current shell")
+    sub.add_parser("shell", help="Print zsh initialization code")
     args = parser.parse_args()
     try:
         if args.action == "daemon":
@@ -59,7 +59,8 @@ def main():
             print(json.dumps(request({"op": "stats"}), indent=2))
         elif args.action == "shell":
             import shlex
-            plugin = Path(__file__).resolve().parents[2] / "shell/jis.plugin.zsh"
+            plugin = Path(__file__).resolve().with_name("jis.plugin.zsh")
+            print(f"export JIS_PYTHON={shlex.quote(sys.executable)}")
             print(f"source {shlex.quote(str(plugin))}")
         else:
             payload = {"op": {"status": "stats", "stop": "stop"}.get(args.action, args.action)}

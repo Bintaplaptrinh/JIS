@@ -67,8 +67,7 @@ eval "$("$HOME/.local/share/jis/venv/bin/jis" shell)"
 ```
 
 Use `~/.local/share/jis/venv/bin/jis` for CLI commands, or activate the virtual
-environment to use `jis` directly. To upgrade, repeat the pip command with
-`--upgrade`. For pipx installations, run `pipx upgrade jis-terminal`.
+environment to use `jis` directly. See [Updating JIS](#updating-jis) for upgrades.
 
 Once maintainers publish `jis-terminal` to PyPI, users can replace the GitHub URL
 with `jis-terminal`: `pipx install jis-terminal` or, inside a virtual environment,
@@ -106,6 +105,92 @@ eval "$("$HOME/path/to/JIS/.venv/bin/jis" shell)"
 
 Open a new terminal to enable it. If `zsh-autosuggestions` is already loaded,
 JIS disables its renderer for that shell so it can display its own ghost text.
+
+## Updating JIS
+
+JIS updates on request. Use the method matching your installation source.
+
+First, stop the shared daemon if it is running:
+
+```sh
+jis stop
+```
+
+For the dedicated pip environment, use
+`"$HOME/.local/share/jis/venv/bin/jis" stop` instead. Keep the same
+`JIS_STATE_DIR` when stopping and restarting; if you use multiple state
+directories, stop each daemon. Stopping the daemon preserves learned history.
+
+### Latest code from GitHub
+
+For a pipx installation from the unpinned GitHub URL:
+
+```sh
+pipx reinstall jis-terminal
+```
+
+[pipx reinstall](https://pipx.pypa.io/latest/how-to/manage-installed-apps.html#reinstall-one)
+rebuilds the environment using its recorded installation source and options.
+This fetches the current default branch even when its version number has not
+changed. An installation pinned to a tag or commit stays on that revision.
+
+For the dedicated pip environment:
+
+```sh
+"$HOME/.local/share/jis/venv/bin/python" -m pip install --upgrade --force-reinstall \
+  'git+https://github.com/Bintaplaptrinh/JIS.git'
+```
+
+For another virtual environment, activate it and use `python -m pip` with the
+same arguments. The explicit GitHub URL selects the current default branch.
+[Pip considers the package version when upgrading VCS installs](https://pip.pypa.io/en/stable/topics/vcs-support/);
+`--force-reinstall` ensures changed code is installed even if the version is
+unchanged. The default branch can include changes ahead of a published release.
+
+### Latest published release from PyPI
+
+After PyPI releases are available, update an installation made from PyPI with:
+
+```sh
+pipx upgrade jis-terminal
+```
+
+For the dedicated pip environment:
+
+```sh
+"$HOME/.local/share/jis/venv/bin/python" -m pip install --upgrade jis-terminal
+```
+
+These commands select the newest stable release compatible with your Python
+version. `pipx upgrade` retains the original installation source: an existing
+GitHub installation continues using GitHub. To switch that installation to PyPI,
+run `pipx install --force jis-terminal` once, then use `pipx upgrade` thereafter.
+
+### Editable source checkout
+
+From your checkout, pull the latest code and refresh the editable installation:
+
+```sh
+git pull --ff-only
+.venv/bin/python -m pip install -e .
+```
+
+### Load and verify the update
+
+After the installation succeeds, close all terminals that had JIS loaded and
+open new terminals. With the initialization line in `~/.zshrc`, this loads the
+updated plugin and starts the updated daemon automatically. Otherwise, enable
+it in a fresh interactive zsh session with `eval "$(jis shell)"`.
+
+```sh
+jis --version
+jis status
+```
+
+Use the full path to `jis` for a pip environment that is not activated. Re-sourcing
+the plugin in an existing shell is skipped by its load guard; `jis-refresh`
+reconnects to the daemon but does not reload plugin code. For GitHub updates with
+an unchanged version, `jis --version` will still show the same release number.
 
 ## Usage
 

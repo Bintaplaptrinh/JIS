@@ -5,6 +5,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from . import __version__
 from .client import request
 from .paths import prepare_state, private_file
 
@@ -36,6 +37,7 @@ def start():
 
 def main():
     parser = argparse.ArgumentParser(prog="jis", description="JIS local zsh suggestion engine")
+    parser.add_argument("--version", action="version", version=f"JIS {__version__}")
     sub = parser.add_subparsers(dest="action", required=True)
     for name in ("start", "daemon", "stop", "status"):
         sub.add_parser(name)

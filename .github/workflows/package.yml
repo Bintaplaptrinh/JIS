@@ -49,6 +49,7 @@ jobs:
           set -euo pipefail
           trap 'jis stop >/dev/null 2>&1 || true' EXIT
           jis --help
+          jis --version
           zsh -f -i -c 'eval "$(jis shell)"; [[ ${_JIS_LOADED:-} == 1 ]] || exit 1; jis-status'
           jis correct 'gti status' > correction.json
           python - <<'PY'

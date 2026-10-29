@@ -29,8 +29,18 @@ def decode_frame(data):
 
 def encode_response(response, shell=False):
     if shell:
+        candidates = []
+        if response.get("kind") == "completion":
+            for candidate in response.get("candidates", [])[:8]:
+                command = candidate.get("command", "")
+                if candidate.get("kind") == "completion" and isinstance(command, str) and not re.search(r"[\x00-\x1f\x7f-\x9f]", command):
+                    candidates.append(command)
         values = (response.get("id", "0"), response.get("kind", "none"),
-                  response.get("command", ""), response.get("reason", ""))
+                  response.get("command", ""), response.get("reason", ""), "\n".join(candidates))
+        # Keep the shell frame bounded even for unusually long history entries.
+        while candidates and len(("\t".join(encode_field(v) for v in values) + "\n").encode()) > MAX_FRAME:
+            candidates.pop()
+            values = (*values[:4], "\n".join(candidates))
         return ("\t".join(encode_field(v) for v in values) + "\n").encode()
     data = (json.dumps(response, ensure_ascii=False, separators=(",", ":")) + "\n").encode()
     if len(data) > MAX_FRAME and "candidates" in response:

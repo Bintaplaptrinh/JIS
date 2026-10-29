@@ -11,6 +11,8 @@ model downloads.
 - Catch common subcommand typos for git, npm, docker, conda, kubectl, and pip.
 - Show history suggestions as ghost text, ranked by session, working directory,
   previous command, frequency, and recency.
+- Browse a table of matching history commands with the arrow keys and fill the
+  selected command with Ctrl-Space.
 - Share one local daemon across multiple terminals, with bounded queues, caches,
   and a SQLite history of up to 20,000 observations.
 - Review a proposed correction before running it. Accepting a correction only
@@ -47,6 +49,8 @@ source "$PWD/shell/jis.plugin.zsh"
 
 Sourcing the plugin starts the shared daemon automatically. Keep the checkout
 in place: the shell plugin and launcher run from this directory.
+After updating an existing checkout, run `./bin/jis stop` and open a new shell
+so the shared daemon picks up the updated suggestion protocol.
 
 ### Enable JIS in every terminal
 
@@ -77,8 +81,12 @@ Ctrl-G, to restore the original input.
 
 ### Complete a command from history
 
-Run `echo jis-demo-one`, then type `echo jis-`. JIS displays the remaining text
-as a suggestion. Press Ctrl-Space to fill it, then Enter to execute it.
+Run `echo jis-demo-one` and `echo jis-demo-two`, then type `echo jis-`. JIS
+displays matching commands in a table and the selected command as ghost text.
+Use the Up and Down arrow keys to select a match. Press Ctrl-Space to fill it,
+then Enter to execute it. With no table visible, the arrow keys navigate shell
+history as usual. Use `jis-table-off` to hide the table while keeping ghost
+text, and `jis-table-on` to show it again in the current shell.
 Suggestions come from successful commands observed after JIS was enabled;
 your existing `.zsh_history` is not imported.
 
@@ -88,6 +96,8 @@ your existing `.zsh_history` is not imported.
 | `yes` + Enter | Fill the proposed correction for review |
 | `no` + Enter / Ctrl-G | Restore the original input |
 | Ctrl-Space | Fill a history suggestion |
+| Up / Down | Select a suggestion while the table is visible |
+| `jis-table-off` / `jis-table-on` | Hide / show the suggestion table in the current shell |
 | Ctrl-X, then Enter | Execute the current input while bypassing correction |
 | `jis-off` / `jis-on` | Disable / enable JIS in the current shell |
 | `jis-refresh` | Reconnect and refresh known aliases and functions |
@@ -107,7 +117,7 @@ export JIS_PYTHON="$PWD/.venv/bin/python"
 ```
 
 The virtual environment also provides `.venv/bin/jis`. Run `./bin/jis --help`
-for available commands.
+or `./bin/jis --usage` for detailed commands, shell controls, and configuration.
 
 ## Configuration
 
@@ -117,6 +127,7 @@ Set environment variables **before** sourcing the plugin:
 | --- | --- | --- |
 | `JIS_PYTHON` | `python`, falling back to `python3` | Interpreter used by the launcher |
 | `JIS_STATE_DIR` | `${XDG_STATE_HOME:-$HOME/.local/state}/jis` | Local socket, history database, lock, and log directory |
+| `JIS_SUGGEST_TABLE` | `1` | Set to `0` to start with the suggestion table hidden |
 
 For example, to use a separate history and daemon:
 

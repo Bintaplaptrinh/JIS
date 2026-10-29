@@ -16,7 +16,10 @@ typeset -g _JIS_LOADED=1 _JIS_FD='' _JIS_PREVIOUS='' _JIS_RUNNING=''
 typeset -g _JIS_RUNNING_CWD='' _JIS_SUGGESTION='' _JIS_KIND='' _JIS_CONFIRM=''
 typeset -g _JIS_SENT_BUFFER='' _JIS_SENT_CWD='' _JIS_SENT_PREVIOUS='' _JIS_SENT_PATH=''
 typeset -g _JIS_LAST_BUFFER='' _JIS_LAST_CWD='' _JIS_LAST_PATH=''
-typeset -gi _JIS_ID=0 _JIS_BUSY=0 _JIS_ENABLED=1
+typeset -ga _JIS_CANDIDATES=()
+typeset -gi _JIS_ID=0 _JIS_BUSY=0 _JIS_ENABLED=1 _JIS_SELECTED=1 _JIS_MENU_VISIBLE=0
+typeset -gi _JIS_TABLE_ENABLED=1
+[[ ${JIS_SUGGEST_TABLE:-1} == 0 ]] && _JIS_TABLE_ENABLED=0
 
 _jis_encode() {
   REPLY="=$1"
@@ -88,7 +91,7 @@ _jis_parse() {
   local line=$1 REPLY
   local -a fields
   fields=( "${(@ps:\t:)line}" )
-  (( ${#fields} == 4 )) || return 1
+  (( ${#fields} == 4 || ${#fields} == 5 )) || return 1
   local field
   for field in "${fields[@]}"; do
     [[ $field == '='* ]] || return 1
@@ -103,16 +106,64 @@ _jis_parse() {
   esac
   _jis_decode "$fields[3]"; _JIS_RESPONSE_COMMAND=$REPLY
   [[ $_JIS_RESPONSE_COMMAND != *[[:cntrl:]]* ]] || return 1
+  _JIS_RESPONSE_CANDIDATES=()
+  if (( ${#fields} == 5 )); then
+    _jis_decode "$fields[5]"
+    _JIS_RESPONSE_CANDIDATES=( "${(@f)REPLY}" )
+    local candidate
+    for candidate in "${_JIS_RESPONSE_CANDIDATES[@]}"; do
+      [[ $candidate != *[[:cntrl:]]* ]] || return 1
+    done
+  fi
 }
 
 _jis_clear() {
   _JIS_SUGGESTION='' _JIS_KIND=''
+  _JIS_CANDIDATES=() _JIS_SELECTED=1
+  if (( _JIS_MENU_VISIBLE )); then
+    zle -M '' 2>/dev/null
+    _JIS_MENU_VISIBLE=0
+  fi
   POSTDISPLAY=''
   if [[ -n ${_JIS_HIGHLIGHT:-} ]]; then
     region_highlight=("${(@)region_highlight:#$_JIS_HIGHLIGHT}")
     _JIS_HIGHLIGHT=''
   fi
 }
+
+_jis_show_table() {
+  (( _JIS_TABLE_ENABLED && ${#_JIS_CANDIDATES} )) || return 0
+  local message='JIS suggestions (↑/↓ select, Ctrl-Space fill)' item display
+  local -i i=0 width=$(( COLUMNS > 8 ? COLUMNS - 4 : 4 ))
+  for item in "${_JIS_CANDIDATES[@]}"; do
+    (( ++i ))
+    display=${item[1,$width]}
+    display=${display//\%/%%}
+    if (( i == _JIS_SELECTED )); then
+      message+=$'\n'"> $display"
+    else
+      message+=$'\n'"  $display"
+    fi
+  done
+  zle -M "$message"
+  _JIS_MENU_VISIBLE=1
+}
+
+_jis_move_selection() {
+  if (( _JIS_TABLE_ENABLED && ${#_JIS_CANDIDATES} )) && [[ $BUFFER == $_JIS_SENT_BUFFER && $PWD == $_JIS_SENT_CWD && $PATH == $_JIS_SENT_PATH && $_JIS_PREVIOUS == $_JIS_SENT_PREVIOUS ]]; then
+    (( _JIS_SELECTED = (_JIS_SELECTED - 1 + $1 + ${#_JIS_CANDIDATES}) % ${#_JIS_CANDIDATES} + 1 ))
+    _JIS_SUGGESTION=$_JIS_CANDIDATES[$_JIS_SELECTED]
+    POSTDISPLAY=${_JIS_SUGGESTION[${#BUFFER}+1,-1]}
+    region_highlight=("${(@)region_highlight:#$_JIS_HIGHLIGHT}")
+    _JIS_HIGHLIGHT="${#BUFFER} $(( ${#BUFFER} + ${#POSTDISPLAY} )) fg=8"
+    region_highlight+=("$_JIS_HIGHLIGHT")
+    _jis_show_table
+  else
+    if (( $1 < 0 )); then zle up-line-or-history; else zle down-line-or-history; fi
+  fi
+}
+_jis_up() { _jis_move_selection -1; }
+_jis_down() { _jis_move_selection 1; }
 
 _jis_receive() {
   local line
@@ -128,9 +179,18 @@ _jis_receive() {
   if [[ $BUFFER == $_JIS_SENT_BUFFER && $PWD == $_JIS_SENT_CWD && $PATH == $_JIS_SENT_PATH && $_JIS_PREVIOUS == $_JIS_SENT_PREVIOUS ]]; then
     _JIS_SUGGESTION=$_JIS_RESPONSE_COMMAND _JIS_KIND=$_JIS_RESPONSE_KIND
     if [[ $_JIS_KIND == completion && $_JIS_SUGGESTION == "$BUFFER"* && -n $BUFFER ]]; then
+      local candidate
+      _JIS_CANDIDATES=()
+      for candidate in "${_JIS_RESPONSE_CANDIDATES[@]}"; do
+        [[ $candidate == "$BUFFER"* && $candidate != "$BUFFER" ]] && _JIS_CANDIDATES+=("$candidate")
+      done
+      (( ${#_JIS_CANDIDATES} )) || _JIS_CANDIDATES=("$_JIS_SUGGESTION")
+      _JIS_SELECTED=1
+      _JIS_SUGGESTION=$_JIS_CANDIDATES[1]
       POSTDISPLAY=${_JIS_SUGGESTION[${#BUFFER}+1,-1]}
       _JIS_HIGHLIGHT="${#BUFFER} $(( ${#BUFFER} + ${#POSTDISPLAY} )) fg=8"
       region_highlight+=("$_JIS_HIGHLIGHT")
+      _jis_show_table
     else
       POSTDISPLAY=''
     fi
@@ -240,7 +300,7 @@ _jis_accept_line() {
 
 _jis_fill() {
   [[ -z $_JIS_CONFIRM ]] || return 0
-  if [[ $_JIS_KIND == completion && $_JIS_SUGGESTION == "$BUFFER"* && $BUFFER == $_JIS_SENT_BUFFER && $PWD == $_JIS_SENT_CWD && $PATH == $_JIS_SENT_PATH ]]; then
+  if [[ $_JIS_KIND == completion && $_JIS_SUGGESTION == "$BUFFER"* && $BUFFER == $_JIS_SENT_BUFFER && $PWD == $_JIS_SENT_CWD && $PATH == $_JIS_SENT_PATH && $_JIS_PREVIOUS == $_JIS_SENT_PREVIOUS ]]; then
     BUFFER=$_JIS_SUGGESTION CURSOR=${#_JIS_SUGGESTION}
     _jis_clear
   fi
@@ -298,6 +358,8 @@ _jis_precmd() {
 
 jis-on() { _JIS_ENABLED=1; }
 jis-off() { _JIS_ENABLED=0; _jis_disconnect; }
+jis-table-on() { _JIS_TABLE_ENABLED=1; _JIS_LAST_BUFFER=''; }
+jis-table-off() { _JIS_TABLE_ENABLED=0; _JIS_LAST_BUFFER=''; }
 jis-status() { "$_JIS_ROOT/bin/jis" status; }
 jis-refresh() { _jis_disconnect; _jis_connect; _JIS_LAST_BUFFER=''; }
 
@@ -312,6 +374,8 @@ fi
 zle -A accept-line jis-original-accept-line
 zle -N accept-line _jis_accept_line
 zle -N jis-fill _jis_fill
+zle -N jis-up _jis_up
+zle -N jis-down _jis_down
 zle -N jis-bypass _jis_bypass
 zle -N jis-cancel _jis_cancel
 zle -N jis-socket-response _jis_receive
@@ -319,6 +383,10 @@ bindkey '^X^J' jis-bypass
 bindkey '^X^M' jis-bypass
 bindkey '^G' jis-cancel
 bindkey '^ ' jis-fill
+bindkey '^[[A' jis-up
+bindkey '^[[B' jis-down
+bindkey '^[OA' jis-up
+bindkey '^[OB' jis-down
 add-zle-hook-widget line-pre-redraw _jis_redraw
 add-zle-hook-widget line-finish _jis_line_finish
 add-zsh-hook preexec _jis_preexec

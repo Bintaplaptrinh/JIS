@@ -1,16 +1,35 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "jis-terminal"
 version = "0.1.0"
 description = "Local, resource-bounded suggestion engine for zsh"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = []
+classifiers = [
+    "Environment :: Console",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: System :: Shells",
+]
+
+[project.urls]
+Homepage = "https://github.com/Bintaplaptrinh/JIS"
+Issues = "https://github.com/Bintaplaptrinh/JIS/issues"
 
 [project.scripts]
 jis = "jis.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["jis"]
+namespaces = false
+
+[tool.setuptools.package-data]
+jis = ["jis.plugin.zsh"]

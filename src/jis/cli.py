@@ -5,6 +5,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from . import __version__
 from .client import request
 from .paths import prepare_state, private_file
 
@@ -40,7 +41,7 @@ def main():
         description="""JIS is a local command assistant for interactive zsh.
 It suggests successful commands from history and checks simple commands for typos.
 Suggestions are filled into the prompt for review; they are never executed automatically.""",
-        epilog="""Shell controls (after sourcing shell/jis.plugin.zsh):
+        epilog="""Shell controls (after initializing JIS in zsh):
   Up/Down       Select a history suggestion when the table is visible
   Ctrl-Space    Fill the selected suggestion; press Enter to execute
   Enter         Check for a typo before executing
@@ -63,6 +64,7 @@ Examples:
   jis status                Show daemon and history statistics
   jis stop                  Stop the shared daemon""")
     parser.add_argument("--usage", action="help", help="show this detailed help and exit")
+    parser.add_argument("--version", action="version", version=f"JIS {__version__}")
     sub = parser.add_subparsers(dest="action", required=True)
     for name, help_text in (("start", "start the shared daemon"), ("daemon", "run the daemon in the foreground"),
                             ("stop", "stop the shared daemon"), ("status", "show daemon statistics")):
@@ -76,7 +78,7 @@ Examples:
         p.add_argument("--known", action="append", default=[], help="known shell command; may be repeated")
         if name == "record":
             p.add_argument("--exit-code", type=int, default=0, help="command exit status (default: 0)")
-    sub.add_parser("shell", help="Print source line for current shell")
+    sub.add_parser("shell", help="Print zsh initialization code")
     args = parser.parse_args()
     try:
         if args.action == "daemon":
@@ -87,7 +89,8 @@ Examples:
             print(json.dumps(request({"op": "stats"}), indent=2))
         elif args.action == "shell":
             import shlex
-            plugin = Path(__file__).resolve().parents[2] / "shell/jis.plugin.zsh"
+            plugin = Path(__file__).resolve().with_name("jis.plugin.zsh")
+            print(f"export JIS_PYTHON={shlex.quote(sys.executable)}")
             print(f"source {shlex.quote(str(plugin))}")
         else:
             payload = {"op": {"status": "stats", "stop": "stop"}.get(args.action, args.action)}

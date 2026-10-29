@@ -1,0 +1,3 @@
+# Setuptools otherwise includes local test_*.py files in source archives,
+# even though this repository deliberately keeps tests outside public source.
+prune tests

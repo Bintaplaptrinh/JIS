@@ -25,9 +25,56 @@ The current release uses heuristic rules throughout the suggestion pipeline.
 ### Requirements
 
 - Linux (the current runtime uses Linux file and Unix socket facilities).
-- Python 3.10 or newer, with `venv` and `pip` for the installation below.
+- Python 3.10 or newer.
 - zsh with the `zsh/net/socket` module.
-- Git to clone the repository.
+- Git when installing directly from GitHub.
+
+### Install with pipx (recommended)
+
+JIS is distributed as the Python package `jis-terminal`, which provides the `jis`
+command and includes the zsh plugin. [pipx](https://pipx.pypa.io/stable/installation/)
+installs the command in its own virtual environment and makes it available on
+your PATH. Until a PyPI release is published, install directly from GitHub:
+
+```sh
+pipx install 'git+https://github.com/Bintaplaptrinh/JIS.git'
+pipx ensurepath
+```
+
+Open a new terminal if `pipx ensurepath` changed your PATH. In interactive zsh,
+enable JIS with:
+
+```zsh
+eval "$(jis shell)"
+```
+
+Add that same line to `~/.zshrc`, after other shell plugins, to enable JIS in
+every terminal. The initialization selects the Python interpreter that installed
+JIS, so activating its virtual environment is unnecessary. No checkout is needed.
+
+### Install with pip
+
+Use a dedicated virtual environment:
+
+```sh
+python3 -m venv "$HOME/.local/share/jis/venv"
+"$HOME/.local/share/jis/venv/bin/python" -m pip install \
+  'git+https://github.com/Bintaplaptrinh/JIS.git'
+```
+
+Add this line to `~/.zshrc`, after other shell plugins:
+
+```zsh
+eval "$("$HOME/.local/share/jis/venv/bin/jis" shell)"
+```
+
+Use `~/.local/share/jis/venv/bin/jis` for CLI commands, or activate the virtual
+environment to use `jis` directly. See [Updating JIS](#updating-jis) for upgrades.
+
+Once maintainers publish `jis-terminal` to PyPI, users can replace the GitHub URL
+with `jis-terminal`: `pipx install jis-terminal` or, inside a virtual environment,
+`python -m pip install jis-terminal`. Registry installation requires that first
+release; the GitHub installation path does not.
 
 ### Install from source
 
@@ -40,30 +87,114 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -e .
 ```
 
-In an interactive **zsh** session, run these commands from the repository directory:
+In an interactive **zsh** session, run this command from the repository directory:
 
 ```zsh
-export JIS_PYTHON="$PWD/.venv/bin/python"
-source "$PWD/shell/jis.plugin.zsh"
+eval "$(.venv/bin/jis shell)"
 ```
 
-Sourcing the plugin starts the shared daemon automatically. Keep the checkout
-in place: the shell plugin and launcher run from this directory.
-After updating an existing checkout, run `./bin/jis stop` and open a new shell
-so the shared daemon picks up the updated suggestion protocol.
+Sourcing the plugin starts the shared daemon automatically. Editable installs
+require keeping the checkout in place.
+After upgrading JIS, run `jis stop` and open a new shell so the shared daemon
+picks up the updated suggestion protocol.
 
 ### Enable JIS in every terminal
 
-Add the following lines to `~/.zshrc`, replacing the paths with the absolute path
-to your checkout. Load JIS after other shell plugins:
+For an editable source install, add this line to `~/.zshrc`, replacing the path
+with the absolute path to your checkout. Load JIS after other shell plugins:
 
 ```zsh
-export JIS_PYTHON="$HOME/path/to/JIS/.venv/bin/python"
-source "$HOME/path/to/JIS/shell/jis.plugin.zsh"
+eval "$("$HOME/path/to/JIS/.venv/bin/jis" shell)"
 ```
 
 Open a new terminal to enable it. If `zsh-autosuggestions` is already loaded,
 JIS disables its renderer for that shell so it can display its own ghost text.
+
+## Updating JIS
+
+JIS updates on request. Use the method matching your installation source.
+
+First, stop the shared daemon if it is running:
+
+```sh
+jis stop
+```
+
+For the dedicated pip environment, use
+`"$HOME/.local/share/jis/venv/bin/jis" stop` instead. Keep the same
+`JIS_STATE_DIR` when stopping and restarting; if you use multiple state
+directories, stop each daemon. Stopping the daemon preserves learned history.
+
+### Latest code from GitHub
+
+For a pipx installation from the unpinned GitHub URL:
+
+```sh
+pipx reinstall jis-terminal
+```
+
+[pipx reinstall](https://pipx.pypa.io/latest/how-to/manage-installed-apps.html#reinstall-one)
+rebuilds the environment using its recorded installation source and options.
+This fetches the current default branch even when its version number has not
+changed. An installation pinned to a tag or commit stays on that revision.
+
+For the dedicated pip environment:
+
+```sh
+"$HOME/.local/share/jis/venv/bin/python" -m pip install --upgrade --force-reinstall \
+  'git+https://github.com/Bintaplaptrinh/JIS.git'
+```
+
+For another virtual environment, activate it and use `python -m pip` with the
+same arguments. The explicit GitHub URL selects the current default branch.
+[Pip considers the package version when upgrading VCS installs](https://pip.pypa.io/en/stable/topics/vcs-support/);
+`--force-reinstall` ensures changed code is installed even if the version is
+unchanged. The default branch can include changes ahead of a published release.
+
+### Latest published release from PyPI
+
+After PyPI releases are available, update an installation made from PyPI with:
+
+```sh
+pipx upgrade jis-terminal
+```
+
+For the dedicated pip environment:
+
+```sh
+"$HOME/.local/share/jis/venv/bin/python" -m pip install --upgrade jis-terminal
+```
+
+These commands select the newest stable release compatible with your Python
+version. `pipx upgrade` retains the original installation source: an existing
+GitHub installation continues using GitHub. To switch that installation to PyPI,
+run `pipx install --force jis-terminal` once, then use `pipx upgrade` thereafter.
+
+### Editable source checkout
+
+From your checkout, pull the latest code and refresh the editable installation:
+
+```sh
+git pull --ff-only
+.venv/bin/python -m pip install -e .
+```
+
+### Load and verify the update
+
+After the installation succeeds, close all terminals that had JIS loaded and
+open new terminals. With the initialization line in `~/.zshrc`, this loads the
+updated plugin and starts the updated daemon automatically. Otherwise, enable
+it in a fresh interactive zsh session with `eval "$(jis shell)"`.
+
+```sh
+jis --version
+jis status
+```
+
+Use the full path to `jis` for a pip environment that is not activated. Re-sourcing
+the plugin in an existing shell is skipped by its load guard; `jis-refresh`
+reconnects to the daemon but does not reload plugin code. For GitHub updates with
+an unchanged version, `jis --version` will still show the same release number.
 
 ## Usage
 
@@ -105,19 +236,19 @@ your existing `.zsh_history` is not imported.
 
 ### Command-line interface
 
-From the checkout, use the launcher with the same Python interpreter:
+For a pipx install, or with the pip virtual environment activated:
 
 ```sh
-export JIS_PYTHON="$PWD/.venv/bin/python"
-./bin/jis status
-./bin/jis correct 'gti status'
-./bin/jis suggest 'echo jis-'
-./bin/jis stop
-./bin/jis start
+jis status
+jis correct 'gti status'
+jis suggest 'echo jis-'
+jis stop
+jis start
 ```
 
-The virtual environment also provides `.venv/bin/jis`. Run `./bin/jis --help`
-or `./bin/jis --usage` for detailed commands, shell controls, and configuration.
+Run `jis --help` or `jis --usage` for detailed commands, shell controls, and
+configuration. The checkout also retains `./bin/jis`
+and `shell/jis.plugin.zsh` for existing source installations.
 
 ## Configuration
 
@@ -125,7 +256,7 @@ Set environment variables **before** sourcing the plugin:
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `JIS_PYTHON` | `python`, falling back to `python3` | Interpreter used by the launcher |
+| `JIS_PYTHON` | Interpreter running `jis shell`; otherwise `python`, falling back to `python3` | Interpreter used by the plugin (`jis shell` selects it automatically) |
 | `JIS_STATE_DIR` | `${XDG_STATE_HOME:-$HOME/.local/state}/jis` | Local socket, history database, lock, and log directory |
 | `JIS_SUGGEST_TABLE` | `1` | Set to `0` to start with the suggestion table hidden |
 
@@ -133,8 +264,7 @@ For example, to use a separate history and daemon:
 
 ```zsh
 export JIS_STATE_DIR="$HOME/.local/state/jis-work"
-export JIS_PYTHON="$HOME/path/to/JIS/.venv/bin/python"
-source "$HOME/path/to/JIS/shell/jis.plugin.zsh"
+eval "$(jis shell)"
 ```
 
 If Ctrl-Space is intercepted by your terminal or input method, bind another key
@@ -164,13 +294,13 @@ review a command before executing it.
 ## Troubleshooting
 
 - **The daemon does not start:** check `JIS_PYTHON` and inspect `daemon.log` in
-  your state directory. Run `./bin/jis start` to see the error.
-- **Suggestions stop appearing:** run `./bin/jis start`, then `jis-refresh` in
+  your state directory. Run `jis start` to see the error.
+- **Suggestions stop appearing:** run `jis start`, then `jis-refresh` in
   the affected shell. Check that JIS is enabled with `jis-on`.
 - **A command keeps triggering correction:** use Ctrl-X, then Enter to run the
   original input. Run `jis-refresh` after adding aliases or functions.
 - **Disable JIS permanently:** remove its lines from `~/.zshrc` and open a new
-  shell. Run `./bin/jis stop` to stop the shared daemon. `jis-off` only affects
+  shell. Run `jis stop` to stop the shared daemon. `jis-off` only affects
   the current shell.
 
 ## Bug reports and contributions
@@ -181,9 +311,32 @@ Python and zsh versions, a minimal reproduction, and relevant log output with
 private information removed.
 
 This repository publishes the official heuristic runtime, shell integration,
-installation metadata, and this README. Tests, recipes, research documentation,
+installation metadata, package workflow, and this README. Tests, recipes, research documentation,
 notebooks, model checkpoints, generated output, and experimental tooling are
 kept outside the tracked source through `.gitignore`.
+
+## Publishing a PyPI release
+
+The package workflow builds a source archive and wheel, checks their metadata,
+and verifies the installed CLI and zsh integration on Linux. It runs on pushes,
+pull requests, manual dispatch, and published GitHub releases.
+
+For the first release:
+
+1. Sign in to PyPI and [add a pending trusted publisher](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/)
+   with project name `jis-terminal`, owner `Bintaplaptrinh`, repository `JIS`,
+   workflow filename `package.yml`, and environment `pypi`. Confirm the package
+   name is available; a pending publisher does not reserve it.
+2. Create the GitHub Actions environment `pypi` in the repository settings.
+3. Keep the versions in `pyproject.toml` and `src/jis/__init__.py` aligned, then
+   commit and push the changes.
+4. Publish a GitHub release with a tag matching the version, such as `v0.1.0`.
+   After package validation passes, the workflow publishes to PyPI using OIDC,
+   without a stored PyPI API token.
+
+Each release must use a new version. PyPI does not allow replacing an uploaded
+distribution. Publishing requires the maintainer's PyPI/GitHub setup above;
+building and installing from GitHub require no registry credentials.
 
 ## License
 
